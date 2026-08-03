@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Менеджер бэкапов
+Comment=Нативная утилита для создания пресетов и бэкапов
+Exec=/pathtofile/backupx
+Icon=package-x-generic
+Terminal=false
+Categories=Utility;Archiving;
