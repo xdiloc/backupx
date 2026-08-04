@@ -4,6 +4,10 @@ public class VerifyTab : Box {
 	private TreeView tree_view;
 	private Gtk.ListStore list_store;
 	private Window parent_window;
+	private Spinner spinner;
+	private Button btn_check;
+	private Button btn_refresh;
+	private Button btn_open;
 
 	private struct BackupItem {
 		string name;
@@ -51,17 +55,17 @@ public class VerifyTab : Box {
 		scroll.add(tree_view);
 		scroll.set_vexpand(true);
 
-		var btn_refresh = new Button.with_label("Обновить список");
+		btn_refresh = new Button.with_label("Обновить список");
 		btn_refresh.clicked.connect(() => {
 			refresh_backups();
 		});
 
-		var btn_check = new Button.with_label("Проверить выбранный архив");
+		btn_check = new Button.with_label("Проверить выбранный архив");
 		btn_check.clicked.connect(() => {
 			verify_backup(parent_window);
 		});
 
-		var btn_open = new Button.with_label("Открыть папку");
+		btn_open = new Button.with_label("Открыть папку");
 		btn_open.clicked.connect(() => {
 			try {
 				AppInfo.launch_default_for_uri("file://" + BACKUP_DIR, null);
@@ -70,11 +74,14 @@ public class VerifyTab : Box {
 			}
 		});
 
+		spinner = new Spinner();
+		spinner.set_no_show_all(true);
+
 		var button_box = new Box(Orientation.HORIZONTAL, 10);
-		button_box.set_homogeneous(true);
 		button_box.pack_start(btn_refresh, true, true, 0);
 		button_box.pack_start(btn_check, true, true, 0);
 		button_box.pack_start(btn_open, true, true, 0);
+		button_box.pack_start(spinner, false, false, 0);
 
 		this.pack_start(scroll, true, true, 0);
 		this.pack_start(button_box, false, false, 5);
@@ -139,7 +146,7 @@ public class VerifyTab : Box {
 	}
 
 	/**
-	 * @brief Проверка целостности выбранного архива по контрольной сумме
+	 * @brief Проверка целостности выбранного архива по контрольной сумме с измерением времени
 	 * parent - родительское окно
 	 */
 	private void verify_backup(Window parent) {
@@ -154,7 +161,7 @@ public class VerifyTab : Box {
 		model.get(iter, 0, out selected_name);
 
 		string selected_file = BACKUP_DIR + "/" + selected_name;
-		
+
 		// Безопасное формирование имени файла манифеста без жесткого обрезания строк
 		if (!selected_name.has_suffix(".tar")) {
 			show_error(parent, "Ошибка", "Неверный формат имени архивного файла.");
@@ -172,9 +179,33 @@ public class VerifyTab : Box {
 			return;
 		}
 
+		// Блокируем интерфейс и запускаем спиннер перед операцией
+		btn_check.sensitive = false;
+		btn_refresh.sensitive = false;
+		spinner.start();
+		spinner.show();
+
+		var timer = new Timer();
+		timer.start();
+
+		// Искусственная задержка (около 2 секунд) с прокруткой событий интерфейса, чтобы спиннер гарантированно анимировался
+		/*
+		for (int i = 0; i < 20; i++) {
+			Posix.usleep(100000); // 0.1 сек
+			while (Gtk.events_pending()) {
+				Gtk.main_iteration();
+			}
+		}
+		*/
+
 		try {
 			string manifest_contents;
 			if (!FileUtils.get_contents(manifest_file, out manifest_contents)) {
+				timer.stop();
+				spinner.stop();
+				spinner.hide();
+				btn_check.sensitive = true;
+				btn_refresh.sensitive = true;
 				show_error(parent, "Ошибка", "Не удалось прочитать файл манифеста.");
 				return;
 			}
@@ -182,6 +213,11 @@ public class VerifyTab : Box {
 			// Безопасный парсинг манифеста с проверкой на пустоту массива
 			string[] parts = manifest_contents.split_set(" \t\n");
 			if (parts.length == 0 || parts[0].strip() == "") {
+				timer.stop();
+				spinner.stop();
+				spinner.hide();
+				btn_check.sensitive = true;
+				btn_refresh.sensitive = true;
 				show_error(parent, "Ошибка", "Файл манифеста поврежден или имеет неверный формат.");
 				return;
 			}
@@ -189,12 +225,25 @@ public class VerifyTab : Box {
 			string expected_hash = parts[0].strip();
 			string? actual_hash = calculate_sha256(selected_file);
 
+			timer.stop();
+			double elapsed = timer.elapsed();
+
+			spinner.stop();
+			spinner.hide();
+			btn_check.sensitive = true;
+			btn_refresh.sensitive = true;
+
 			if (actual_hash != null && actual_hash == expected_hash) {
-				show_info(parent, "Проверка", "Контрольная сумма подтверждена.\nЦелостность архива не нарушена.");
+				show_info(parent, "Проверка", "Контрольная сумма подтверждена.\nЦелостность архива не нарушена.\nВремя проверки: %.2f сек.".printf(elapsed));
 			} else {
-				show_error(parent, "Ошибка", "Контрольная сумма не совпадает!\nАрхив поврежден или изменен.");
+				show_error(parent, "Ошибка", "Контрольная сумма не совпадает!\nАрхив поврежден или изменен.\nВремя проверки: %.2f сек.".printf(elapsed));
 			}
 		} catch (Error e) {
+			timer.stop();
+			spinner.stop();
+			spinner.hide();
+			btn_check.sensitive = true;
+			btn_refresh.sensitive = true;
 			show_error(parent, "Ошибка", e.message);
 		}
 	}

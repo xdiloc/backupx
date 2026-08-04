@@ -78,7 +78,7 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 			Process.spawn_sync(null, test_args, null, SpawnFlags.SEARCH_PATH, null, null, out standard_error, out status);
 			step_timer.stop();
 			time_tar_test = step_timer.elapsed();
-			
+
 			if (status != 0) {
 				err_msg = "Архив поврежден!" + (standard_error != null && standard_error != "" ? "\n\nДетали: " + standard_error.strip() : "");
 				throw new IOError.FAILED(err_msg);

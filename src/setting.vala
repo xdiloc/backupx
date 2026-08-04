@@ -56,6 +56,11 @@ public void load_settings() {
 	SRC_DIR = "";
 	BACKUP_DIR = "";
 
+	// Если файл конфигурации еще не создан (первый запуск), выходим без ошибок
+	if (!FileUtils.test(config_file, FileTest.EXISTS)) {
+		return;
+	}
+
 	try {
 		string contents;
 		if (FileUtils.get_contents(config_file, out contents)) {
