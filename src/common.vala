@@ -33,6 +33,50 @@ public void show_info(Gtk.Window parent, string title, string message) {
 }
 
 /**
+ * @brief Показ информационного окна со свернутой статистикой выполнения
+ * parent - родительское окно
+ * title - заголовок окна
+ * message - основной текст сообщения
+ * stats_text - текст со статистикой по времени процессов
+ */
+public void show_info_with_stats(Gtk.Window parent, string title, string message, string stats_text) {
+	var dialog = new Gtk.Dialog.with_buttons(
+		title,
+		parent,
+		Gtk.DialogFlags.MODAL,
+		"OK",
+		Gtk.ResponseType.OK,
+		null
+	);
+
+	var content_area = dialog.get_content_area() as Gtk.Box;
+	content_area.set_spacing(10);
+	content_area.set_margin_start(15);
+	content_area.set_margin_end(15);
+	content_area.set_margin_top(15);
+	content_area.set_margin_bottom(15);
+
+	var label = new Gtk.Label(message);
+	label.set_xalign(0);
+	content_area.pack_start(label, false, false, 0);
+
+	var expander = new Gtk.Expander("Статистика выполнения");
+	expander.expanded = false;
+
+	var stats_label = new Gtk.Label(stats_text);
+	stats_label.set_xalign(0);
+	stats_label.set_margin_start(10);
+	stats_label.set_margin_top(5);
+	expander.add(stats_label);
+
+	content_area.pack_start(expander, false, false, 0);
+
+	dialog.show_all();
+	dialog.run();
+	dialog.destroy();
+}
+
+/**
  * @brief Показ диалогового окна с подтверждением (Да/Нет)
  * parent - родительское окно
  * title - заголовок окна
