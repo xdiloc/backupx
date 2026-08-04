@@ -17,9 +17,9 @@ if [ ! -d "$BACKUP_DIR" ]; then
 	mkdir -p "$BACKUP_DIR"
 fi
 
-# Архивация: вся папка src, Makefile и сам скрипт
+# Архивация: папки src, asset, а также все конфигурационные файлы, скрипты и документация
 # Выводит список файлов по мере добавления
-zip -r "$ARCHIVE_NAME" src/ asset/ Makefile pack.sh
+zip -r "$ARCHIVE_NAME" src/ asset/ Makefile pack.sh release.sh README.md LICENSE .gitignore
 
 echo "-------------------------------------------"
 echo "Архив создан: $ARCHIVE_NAME"
