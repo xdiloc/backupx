@@ -34,8 +34,36 @@ public class HomeTab : Box {
 		label_rules.set_xalign(0);
 		label_rules.set_line_wrap(true);
 
+		// Визуальный разделитель с уменьшенным отступом
+		var separator = new Separator(Orientation.HORIZONTAL);
+
+		// Заголовок секции о программе
+		var label_about_title = new Label("<b>О программе</b>");
+		label_about_title.use_markup = true;
+		label_about_title.set_xalign(0);
+
+		// Контейнер для плотного размещения информации о программе без лишних отступов
+		var about_box = new Box(Orientation.VERTICAL, 2);
+
+		var version_label = new Label("Версия: 1.0");
+		version_label.set_xalign(0);
+
+		var label_dev = new Label("Разработчик: xdiloc");
+		label_dev.set_xalign(0);
+
+		var link = new Label("<a href=\"https://github.com/xdiloc/backupx\">https://github.com/xdiloc/backupx</a>");
+		link.use_markup = true;
+		link.set_xalign(0);
+
+		about_box.pack_start(version_label, false, false, 0);
+		about_box.pack_start(label_dev, false, false, 0);
+		about_box.pack_start(link, false, false, 0);
+
 		this.pack_start(label_welcome, false, false, 0);
 		this.pack_start(label_info, false, false, 0);
 		this.pack_start(label_rules, false, false, 0);
+		this.pack_start(separator, false, false, 5);
+		this.pack_start(label_about_title, false, false, 0);
+		this.pack_start(about_box, false, false, 0);
 	}
 }
