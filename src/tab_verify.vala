@@ -233,10 +233,11 @@ public class VerifyTab : Box {
 			btn_check.sensitive = true;
 			btn_refresh.sensitive = true;
 
+			string formatted_time = format_elapsed_time(elapsed);
 			if (actual_hash != null && actual_hash == expected_hash) {
-				show_info(parent, "Проверка", "Контрольная сумма подтверждена.\nЦелостность архива не нарушена.\nВремя проверки: %.2f сек.".printf(elapsed));
+				show_info(parent, "Проверка", "Контрольная сумма подтверждена.\nЦелостность архива не нарушена.\nВремя проверки: %s".printf(formatted_time));
 			} else {
-				show_error(parent, "Ошибка", "Контрольная сумма не совпадает!\nАрхив поврежден или изменен.\nВремя проверки: %.2f сек.".printf(elapsed));
+				show_error(parent, "Ошибка", "Контрольная сумма не совпадает!\nАрхив поврежден или изменен.\nВремя проверки: %s".printf(formatted_time));
 			}
 		} catch (Error e) {
 			timer.stop();

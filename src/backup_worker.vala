@@ -107,8 +107,11 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 			}
 		}
 
-		string stats_details = "• Упаковка архива: %.2f сек.\n• Проверка архива: %.2f сек.\n• Расчет хеша (SHA-256): %.2f сек.\n• Общее время: %.2f сек.".printf(
-			time_tar_create, time_tar_test, time_hash, time_total
+		string stats_details = "• Упаковка архива: %s\n• Проверка архива: %s\n• Расчет хеша (SHA-256): %s\n• Общее время: %s".printf(
+			format_elapsed_time(time_tar_create),
+			format_elapsed_time(time_tar_test),
+			format_elapsed_time(time_hash),
+			format_elapsed_time(time_total)
 		);
 
 		// Возвращаем управление в главный поток GTK для разблокировки интерфейса и вывода сообщений

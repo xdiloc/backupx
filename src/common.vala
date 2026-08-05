@@ -115,6 +115,31 @@ public string format_file_size(uint64 size) {
 }
 
 /**
+ * @brief Форматирование времени выполнения в читаемый вид (мс, секунды, минуты, часы)
+ * seconds - время в секундах
+ * return - отформатированная строка времени
+ */
+public string format_elapsed_time(double seconds) {
+	if (seconds < 1.0) {
+		int ms = (int)(seconds * 1000.0 + 0.5);
+		return "%d мс".printf(ms);
+	}
+
+	int total_sec = (int)seconds;
+	int hours = total_sec / 3600;
+	int minutes = (total_sec % 3600) / 60;
+	int secs = total_sec % 60;
+
+	if (hours > 0) {
+		return "%d ч. %d мин. %d сек.".printf(hours, minutes, secs);
+	} else if (minutes > 0) {
+		return "%d мин. %d сек.".printf(minutes, secs);
+	} else {
+		return "%d сек.".printf(secs);
+	}
+}
+
+/**
  * @brief Получение строки со свободным местом на диске для указанного пути
  * target_path - путь к директории или файлу
  */
