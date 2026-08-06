@@ -133,15 +133,9 @@ public class VerifyTab : Box {
 				}
 			}
 
-			// Сортировка по времени: от новых к старым (убывание mtime)
-			for (int i = 0; i < items.length; i++) {
-				for (int j = i + 1; j < items.length; j++) {
-					if (items[j].mtime > items[i].mtime) {
-						BackupItem temp = items[i];
-						items[i] = items[j];
-						items[j] = temp;
-					}
-				}
+			// Сортировка по времени: от новых к старым (убывание mtime) с помощью QuickSort
+			if (items.length > 1) {
+				quick_sort(items, 0, (int)items.length - 1);
 			}
 
 			// Заполнение хранилища отсортированными элементами
@@ -153,6 +147,43 @@ public class VerifyTab : Box {
 		} catch (Error e) {
 			stderr.printf("Error: %s\n", e.message);
 		}
+	}
+
+	/**
+	 * @brief Быстрая сортировка массива элементов бэкапов по времени модификации
+	 * items - массив элементов бэкапа
+	 * low - начальный индекс сортируемого подмассива
+	 * high - конечный индекс сортируемого подмассива
+	 */
+	private void quick_sort(BackupItem[] items, int low, int high) {
+		if (low < high) {
+			int pi = partition(items, low, high);
+			quick_sort(items, low, pi - 1);
+			quick_sort(items, pi + 1, high);
+		}
+	}
+
+	/**
+	 * @brief Вспомогательная функция разделения массива для быстрой сортировки
+	 * items - массив элементов бэкапа
+	 * low - начальный индекс
+	 * high - конечный индекс
+	 */
+	private int partition(BackupItem[] items, int low, int high) {
+		int64 pivot = items[high].mtime;
+		int i = (low - 1);
+		for (int j = low; j <= high - 1; j++) {
+			if (items[j].mtime > pivot) {
+				i++;
+				BackupItem temp = items[i];
+				items[i] = items[j];
+				items[j] = temp;
+			}
+		}
+		BackupItem temp = items[i + 1];
+		items[i + 1] = items[high];
+		items[high] = temp;
+		return (i + 1);
 	}
 
 	/**
