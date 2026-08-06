@@ -17,6 +17,13 @@ public class VerifyTab : Box {
 	}
 
 	/**
+	 * @brief Проверка, выполняется ли сейчас фоновая задача
+	 */
+	public bool is_busy() {
+		return !btn_check.sensitive;
+	}
+
+	/**
 	 * @brief Конструктор вкладки проверки архивов
 	 * parent - родительское окно
 	 */
@@ -197,9 +204,9 @@ public class VerifyTab : Box {
 			var timer = new Timer();
 			timer.start();
 
-			// Искусственная задержка (около 2 секунд) с прокруткой событий интерфейса, чтобы спиннер гарантированно анимировался
+			// Искусственная задержка
 			/*
-			for (int i = 0; i < 20; i++) {
+			for (int i = 0; i < 60; i++) {
 				Posix.usleep(100000); // 0.1 сек
 				while (Gtk.events_pending()) {
 					Gtk.main_iteration();

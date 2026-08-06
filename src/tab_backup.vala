@@ -13,6 +13,13 @@ public class BackupTab : Box {
 	private bool is_updating_preset = false;
 
 	/**
+	 * @brief Проверка, выполняется ли сейчас фоновая задача
+	 */
+	public bool is_busy() {
+		return !btn_make.sensitive;
+	}
+
+	/**
 	 * @brief Конструктор вкладки создания бэкапа
 	 * parent - родительское окно
 	 * on_success - callback функция для обновления списка после создания бэкапа

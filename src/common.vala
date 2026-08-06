@@ -7,6 +7,19 @@ using GLib;
 public delegate void SimpleCallback();
 
 /**
+ * @brief Показ предупреждающего окна
+ * parent - родительское окно
+ * title - заголовок окна
+ * message - текст сообщения
+ */
+public void show_warning(Gtk.Window? parent, string title, string message) {
+	var dialog = new Gtk.MessageDialog(parent, Gtk.DialogFlags.MODAL, Gtk.MessageType.WARNING, Gtk.ButtonsType.OK, "%s", message);
+	dialog.title = title;
+	dialog.run();
+	dialog.destroy();
+}
+
+/**
  * @brief Показ диалогового окна с ошибкой
  * parent - родительское окно
  * title - заголовок окна
