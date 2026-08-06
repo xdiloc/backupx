@@ -96,8 +96,9 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 			step_timer.start();
 			string[] test_args = { "tar", "-tf", backup_file };
 			int test_status;
+			string? test_stdout = null;
 			string? test_stderr = null;
-			Process.spawn_sync(null, test_args, null, SpawnFlags.SEARCH_PATH, null, null, out test_stderr, out test_status);
+			Process.spawn_sync(null, test_args, null, SpawnFlags.SEARCH_PATH, null, out test_stdout, out test_stderr, out test_status);
 			step_timer.stop();
 			time_tar_test = step_timer.elapsed();
 

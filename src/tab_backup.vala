@@ -33,6 +33,12 @@ public class BackupTab : Box {
 		this.set_margin_top(20);
 		this.set_margin_bottom(20);
 
+		// Ранняя инициализация виджетов, используемых в пресетах и при обновлении свободного места
+		entry_src = new Entry();
+		entry_backup = new Entry();
+		label_free_space = new Label("");
+		label_free_space.set_tooltip_text("Свободное место на диске");
+
 		// --- Блок пресетов ---
 		var label_presets = new Label("Пресеты:");
 		label_presets.set_xalign(0);
@@ -166,7 +172,6 @@ public class BackupTab : Box {
 		// --- Основные поля путей ---
 		var label_src = new Label("Исходная папка:");
 		label_src.set_xalign(0);
-		entry_src = new Entry();
 		entry_src.text = SRC_DIR;
 
 		entry_src.changed.connect(() => {
@@ -186,7 +191,6 @@ public class BackupTab : Box {
 
 		var label_backup = new Label("Папка бэкапов:");
 		label_backup.set_xalign(0);
-		entry_backup = new Entry();
 		entry_backup.text = BACKUP_DIR;
 
 		entry_backup.changed.connect(() => {
@@ -216,9 +220,6 @@ public class BackupTab : Box {
 		btn_make = new Button.with_label("Сделать бэкап");
 		spinner = new Spinner();
 		spinner.set_no_show_all(true);
-
-		label_free_space = new Label("");
-		label_free_space.set_tooltip_text("Свободное место на диске");
 
 		icon_disk = new Image.from_icon_name("drive-harddisk", IconSize.INVALID);
 		icon_disk.pixel_size = 28;
