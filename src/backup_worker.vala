@@ -8,11 +8,19 @@ using Gtk;
  * on_success - callback-функция при успешном завершении
  */
 public void start_backup_task(Window parent, Button btn_make, Spinner spinner, SimpleCallback? on_success) {
+	if (SRC_DIR == null || SRC_DIR.strip() == "") {
+		show_error(parent, "Ошибка", "Не указана исходная директория.");
+		return;
+	}
 	if (!FileUtils.test(SRC_DIR, FileTest.IS_DIR)) {
 		show_error(parent, "Ошибка", "Исходная директория " + SRC_DIR + " не найдена.");
 		return;
 	}
 
+	if (BACKUP_DIR == null || BACKUP_DIR.strip() == "") {
+		show_error(parent, "Ошибка", "Не указана директория для бэкапов.");
+		return;
+	}
 	if (!FileUtils.test(BACKUP_DIR, FileTest.IS_DIR)) {
 		show_error(parent, "Ошибка", "Директория для бэкапов " + BACKUP_DIR + " не найдена.");
 		return;
@@ -69,6 +77,20 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 			Pid pid;
 			Process.spawn_async_with_pipes(null, tar_args, null, SpawnFlags.SEARCH_PATH, null, out pid, null, out std_out_fd, out std_err_fd);
 
+			// Параллельное чтение stderr в оперативную память для предотвращения deadlock
+			StringBuilder err_builder = new StringBuilder();
+			Thread<void*> err_thread = new Thread<void*>("stderr-reader", () => {
+				uint8[] err_buffer = new uint8[4096];
+				ssize_t err_bytes;
+				while ((err_bytes = Posix.read(std_err_fd, err_buffer, err_buffer.length)) > 0) {
+					for (int i = 0; i < err_bytes; i++) {
+						err_builder.append_c((char)err_buffer[i]);
+					}
+				}
+				Posix.close(std_err_fd);
+				return null;
+			});
+
 			var checksum = new Checksum(ChecksumType.SHA256);
 			var file = File.new_for_path(backup_file);
 			var fos = file.replace(null, false, FileCreateFlags.NONE, null);
@@ -93,15 +115,8 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 			fos.close(null);
 			Posix.close(std_out_fd);
 
-			// Читаем stderr через POSIX
-			StringBuilder err_builder = new StringBuilder();
-			ssize_t err_bytes;
-			while ((err_bytes = Posix.read(std_err_fd, buffer, buffer.length)) > 0) {
-				for (int i = 0; i < err_bytes; i++) {
-					err_builder.append_c((char)buffer[i]);
-				}
-			}
-			Posix.close(std_err_fd);
+			// Дожидаемся завершения чтения stderr
+			err_thread.join();
 			string? standard_error = err_builder.len > 0 ? err_builder.str.strip() : null;
 
 			int status;
