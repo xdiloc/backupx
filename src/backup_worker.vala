@@ -63,8 +63,8 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 		try {
 			var now = new DateTime.now_local();
 			string timestamp = now.format("%Y%m%d_%H%M%S");
-			backup_file = BACKUP_DIR + "/" + timestamp + ".tar";
-			manifest_file = BACKUP_DIR + "/" + timestamp + ".sha256";
+			backup_file = Path.build_filename(BACKUP_DIR, timestamp + ".tar");
+			manifest_file = Path.build_filename(BACKUP_DIR, timestamp + ".sha256");
 
 			string parent_dir = Path.get_dirname(SRC_DIR);
 			string base_dir = Path.get_basename(SRC_DIR);

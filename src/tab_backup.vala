@@ -11,6 +11,7 @@ public class BackupTab : Box {
 	private Label label_free_space;
 	private Image icon_disk;
 	private bool is_updating_preset = false;
+	private uint backup_save_timeout_id = 0;
 
 	/**
 	 * @brief Проверка, выполняется ли сейчас фоновая задача
@@ -196,17 +197,33 @@ public class BackupTab : Box {
 		entry_backup.changed.connect(() => {
 			BACKUP_DIR = entry_backup.text;
 			reset_preset_selection_if_needed();
-			update_free_space();
-			if (on_success != null) {
-				on_success();
+
+			if (backup_save_timeout_id != 0) {
+				GLib.Source.remove(backup_save_timeout_id);
+				backup_save_timeout_id = 0;
 			}
+
+			backup_save_timeout_id = GLib.Timeout.add(500, () => {
+				update_free_space();
+				save_settings();
+				if (on_success != null) {
+					on_success();
+				}
+				backup_save_timeout_id = 0;
+				return false;
+			});
 		});
 
 		var btn_choose_backup = new Button.with_label("Обзор...");
 		btn_choose_backup.clicked.connect(() => {
+			if (backup_save_timeout_id != 0) {
+				GLib.Source.remove(backup_save_timeout_id);
+				backup_save_timeout_id = 0;
+			}
 			choose_directory(parent_window, "Выберите папку для бэкапов", entry_backup);
 			BACKUP_DIR = entry_backup.text;
 			update_free_space();
+			save_settings();
 			if (on_success != null) {
 				on_success();
 			}
@@ -236,6 +253,10 @@ public class BackupTab : Box {
 		box_action.pack_end(spinner, false, false, 0);
 
 		btn_make.clicked.connect(() => {
+			if (backup_save_timeout_id != 0) {
+				GLib.Source.remove(backup_save_timeout_id);
+				backup_save_timeout_id = 0;
+			}
 			SRC_DIR = entry_src.text;
 			BACKUP_DIR = entry_backup.text;
 			save_settings();
@@ -284,6 +305,7 @@ public class BackupTab : Box {
 	 */
 	private void reset_preset_selection_if_needed() {
 		if (!is_updating_preset) {
+			ACTIVE_PRESET = null;
 			is_updating_preset = true;
 			if (combo_presets.get_active() > 0) {
 				combo_presets.set_active(0);
