@@ -18,6 +18,18 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 		return;
 	}
 
+	var src_file = File.new_for_path(SRC_DIR);
+	var backup_file_target = File.new_for_path(BACKUP_DIR);
+	string? src_path = src_file.get_path();
+	string? backup_path = backup_file_target.get_path();
+
+	if (src_path != null && backup_path != null) {
+		if (backup_path == src_path || backup_path.has_prefix(src_path + "/")) {
+			show_error(parent, "Ошибка", "Директория для бэкапов не может располагаться внутри исходной директории.");
+			return;
+		}
+	}
+
 	// Блокируем интерфейс и запускаем анимацию вращения
 	btn_make.set_sensitive(false);
 	spinner.start();
@@ -63,7 +75,18 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 
 			uint8[] buffer = new uint8[65536];
 			ssize_t bytes_read;
-			while ((bytes_read = Posix.read(std_out_fd, buffer, buffer.length)) > 0) {
+			while (true) {
+				bytes_read = Posix.read(std_out_fd, buffer, buffer.length);
+				if (bytes_read < 0) {
+					if (Posix.errno == Posix.EINTR) {
+						continue;
+					}
+					err_msg = "Ошибка чтения данных из процесса tar.";
+					break;
+				}
+				if (bytes_read == 0) {
+					break;
+				}
 				fos.write(buffer[0:(size_t)bytes_read], null);
 				checksum.update(buffer, (size_t)bytes_read);
 			}
@@ -86,6 +109,10 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 
 			step_timer.stop();
 			time_tar_create = step_timer.elapsed();
+
+			if (err_msg != null) {
+				throw new IOError.FAILED(err_msg);
+			}
 
 			if (status != 0) {
 				err_msg = "Не удалось создать архив." + (standard_error != null && standard_error != "" ? "\n\nДетали: " + standard_error : "");
