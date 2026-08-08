@@ -19,6 +19,27 @@ public class BackupTab : Box {
 	}
 
 	/**
+	@brief Отложенное сохранение настроек и обновление свободного места
+	on_success - callback функция для обновления списка
+	*/
+	private void schedule_save(SimpleCallback? on_success) {
+		if (backup_save_timeout_id != 0) {
+			GLib.Source.remove(backup_save_timeout_id);
+			backup_save_timeout_id = 0;
+		}
+
+		backup_save_timeout_id = GLib.Timeout.add(500, () => {
+			update_free_space();
+			save_settings();
+			if (on_success != null) {
+				on_success();
+			}
+			backup_save_timeout_id = 0;
+			return false;
+		});
+	}
+
+	/**
 	@brief Конструктор вкладки создания бэкапа
 	parent - родительское окно
 	on_success - callback функция для обновления списка после создания бэкапа
@@ -51,20 +72,7 @@ public class BackupTab : Box {
 		entry_src.changed.connect(() => {
 			SRC_DIR = entry_src.text;
 			preset_widget.reset_selection();
-
-			if (backup_save_timeout_id != 0) {
-				GLib.Source.remove(backup_save_timeout_id);
-				backup_save_timeout_id = 0;
-			}
-
-			backup_save_timeout_id = GLib.Timeout.add(500, () => {
-				save_settings();
-				if (on_success != null) {
-					on_success();
-				}
-				backup_save_timeout_id = 0;
-				return false;
-			});
+			schedule_save(on_success);
 		});
 
 		var btn_choose_src = new Button.with_label("Обзор...");
@@ -75,6 +83,7 @@ public class BackupTab : Box {
 			}
 			choose_directory(parent_window, "Выберите исходную папку", entry_src);
 			SRC_DIR = entry_src.text;
+			update_free_space();
 			save_settings();
 			if (on_success != null) {
 				on_success();
@@ -92,21 +101,7 @@ public class BackupTab : Box {
 		entry_backup.changed.connect(() => {
 			BACKUP_DIR = entry_backup.text;
 			preset_widget.reset_selection();
-
-			if (backup_save_timeout_id != 0) {
-				GLib.Source.remove(backup_save_timeout_id);
-				backup_save_timeout_id = 0;
-			}
-
-			backup_save_timeout_id = GLib.Timeout.add(500, () => {
-				update_free_space();
-				save_settings();
-				if (on_success != null) {
-					on_success();
-				}
-				backup_save_timeout_id = 0;
-				return false;
-			});
+			schedule_save(on_success);
 		});
 
 		var btn_choose_backup = new Button.with_label("Обзор...");
