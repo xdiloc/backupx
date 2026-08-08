@@ -49,6 +49,7 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 		// Thread.usleep(5000000);
 
 		string? err_msg = null;
+		string? standard_error = null;
 		string backup_file = "";
 		string manifest_file = "";
 
@@ -117,7 +118,7 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 
 			// Дожидаемся завершения чтения stderr
 			err_thread.join();
-			string? standard_error = err_builder.len > 0 ? err_builder.str.strip() : null;
+			standard_error = err_builder.len > 0 ? err_builder.str.strip() : null;
 
 			int status;
 			Posix.waitpid(pid, out status, 0);
@@ -185,6 +186,13 @@ public void start_backup_task(Window parent, Button btn_make, Spinner spinner, S
 
 			if (err_msg != null) {
 				show_error(parent, "Ошибка", err_msg);
+			} else if (standard_error != null && standard_error != "") {
+				// Если архив создался (код 0), но tar выдал предупреждения в stderr (например, нет доступа к файлам)
+				string warn_msg = "Бекап создан, но в процессе архивации возникли предупреждения:";
+				show_error_list(parent, "Предупреждения tar", warn_msg, standard_error);
+				if (on_success != null) {
+					on_success();
+				}
 			} else {
 				string main_message = "Бекап успешно создан!\n\nАрхив: " + backup_file + "\nМанифест: " + manifest_file;
 				show_info_with_stats(parent, "Успех", main_message, stats_details);

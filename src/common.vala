@@ -90,6 +90,50 @@ public void show_info_with_stats(Gtk.Window parent, string title, string message
 }
 
 /**
+ * @brief Показывает модальное окно со списком ошибок/предупреждений
+ * parent - родительское окно
+ * title - заголовок окна
+ * message - основное сообщение
+ * error_details - текст со списком ошибок (из stderr tar)
+ */
+public void show_error_list(Window parent, string title, string message, string error_details) {
+	var dialog = new Dialog.with_buttons(
+		title,
+		parent,
+		DialogFlags.MODAL | DialogFlags.DESTROY_WITH_PARENT,
+		"Закрыть",
+		ResponseType.CLOSE,
+		null
+	);
+	dialog.set_default_size(500, 350);
+
+	var content_area = dialog.get_content_area();
+	content_area.set_spacing(10);
+	content_area.margin = 12;
+
+	var label = new Label(message);
+	label.xalign = 0.0f;
+	content_area.pack_start(label, false, false, 0);
+
+	var text_view = new TextView();
+	text_view.editable = false;
+	text_view.cursor_visible = false;
+	text_view.buffer.text = error_details;
+
+	var scrolled = new ScrolledWindow(null, null);
+	scrolled.set_policy(PolicyType.AUTOMATIC, PolicyType.AUTOMATIC);
+	scrolled.set_shadow_type(ShadowType.IN);
+	scrolled.add(text_view);
+	content_area.pack_start(scrolled, true, true, 0);
+
+	dialog.response.connect((response_id) => {
+		dialog.destroy();
+	});
+
+	dialog.show_all();
+}
+
+/**
  * @brief Показ диалогового окна с подтверждением (Да/Нет)
  * parent - родительское окно
  * title - заголовок окна
